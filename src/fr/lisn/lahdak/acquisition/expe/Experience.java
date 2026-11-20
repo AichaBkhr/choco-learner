@@ -1,0 +1,156 @@
+package fr.lisn.lahdak.acquisition.expe;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Set;
+
+import fr.lisn.lahdak.acquisition.core.acqconstraint.ACQ_IConstraint;
+import fr.lisn.lahdak.acquisition.core.acqsolver.ACQ_ConstraintSolver;
+import fr.lisn.lahdak.acquisition.core.acqsolver.ACQ_Heuristic;
+import fr.lisn.lahdak.acquisition.core.learners.ACQ_Bias;
+import fr.lisn.lahdak.acquisition.core.learners.ACQ_Query;
+import fr.lisn.lahdak.acquisition.core.learners.ACQ_Scope;
+import fr.lisn.lahdak.acquisition.core.oracle.ACQ_Oracle;
+import fr.lisn.lahdak.acquisition.core.oracle.Answer;
+import fr.lisn.lahdak.acquisition.core.tools.StatManager;
+import fr.lisn.lahdak.acquisition.core.workspace.IExperience;
+
+public abstract class Experience implements IExperience{
+	
+	protected boolean auto_learn;
+	protected ACQ_Heuristic heuristic = ACQ_Heuristic.SOL;
+	protected ACQ_ConstraintSolver solver;
+	protected ACQ_Bias bias;
+    protected ACQ_Oracle oracle;
+
+	protected StatManager stats;
+	
+	public Experience(boolean auto_learn) {
+		this.auto_learn = auto_learn;
+		this.bias=createBias();
+		this.oracle=createOracle();
+		this.solver= createSolver();
+		this.solver.setVars(bias.getVars());
+		stats = new StatManager(bias.getVars().size());		
+	}
+	
+	public abstract ACQ_Bias createBias();
+	
+	public abstract void learn_Parallel();
+	public abstract ACQ_Oracle createOracle();
+	
+	public abstract ACQ_ConstraintSolver createSolver();
+	
+	public void setHeuristic(ACQ_Heuristic H) {
+		this.heuristic=H;
+	}
+	
+	public boolean getAnswer(ACQ_Query e) {
+    	System.out.println(e.oracleAskingFormat());
+		System.out.println("Is it a solution ? (y/n)");
+		try (Scanner in = new Scanner(System.in)) {
+			String userAnswer;
+			do {
+				userAnswer = in.next();
+				System.out.println("You entered:" + userAnswer);
+				if(!userAnswer.equals("y") && !userAnswer.equals("n")) {
+					System.out.println("Incorrect answer.\n Please enter y or n.");
+				}
+			} while(!userAnswer.equals("y") && !userAnswer.equals("n"));
+			if(userAnswer.equals("y")) {
+				stats.update(e);
+				return true;
+			} else {
+				stats.update(e);
+				return false;
+			}
+		}
+    }
+	
+	public static Answer getAnswer(ACQ_Query e, StatManager stats) {
+    	System.out.println("QUACQ");
+    	System.out.println(e.oracleAskingFormat());
+		System.out.println("Is it a solution ? (y/n)");
+		try (Scanner in = new Scanner(System.in)) {
+			String userAnswer;
+			do {
+				userAnswer = in.next();
+				System.out.println("You entered:" + userAnswer);
+				if(!userAnswer.equals("y") && !userAnswer.equals("n")) {
+					System.out.println("Incorrect answer.\n Please enter y or n.");
+				}
+			} while(!userAnswer.equals("y") && !userAnswer.equals("n"));
+			if(userAnswer.equals("y")) {
+				stats.update(e);
+				return Answer.YES;
+			} else {
+				stats.update(e);
+				return Answer.NO;
+			}
+		}
+    }
+	
+	public ACQ_Oracle defaultOracle(StatManager stats) {
+		return new ACQ_Oracle() {
+			@Override
+			public Answer ask(ACQ_Query e) {
+				return getAnswer(e, stats);
+			}
+		};
+	}
+	public StatManager getStatManager() {
+		return stats;
+	}
+	public List<List<ACQ_Scope>> Partition_bias(Integer Users){
+		Set<ACQ_Scope> scopes= new HashSet<>();
+	    List<List<ACQ_Scope>> partitions = new ArrayList<>(Users);
+	    for(int i = 0; i < Users; i++)
+	    	partitions.add(new ArrayList<>());
+		for (ACQ_IConstraint cst : bias.getConstraints()) {
+			
+			scopes.add(cst.getScope());
+		}
+		List<ACQ_Scope> scopes1 = new ArrayList<>( scopes ) ;
+		Collections.shuffle( scopes1 ) ;
+		Iterator<ACQ_Scope> iterator = scopes.iterator();
+		 
+		 for(int i = 0; iterator.hasNext(); i++)
+			 partitions.get(i % Users).add(iterator.next());
+
+
+
+		return partitions;
+		
+		
+	}
+	@Override
+	public boolean isNormalizedCSP() {
+		return true;
+	}
+
+	@Override
+	public ACQ_Heuristic getHeuristic() {
+		return heuristic;
+	}
+
+	@Override
+	public boolean isShuffleSplit() {
+		return true;
+	}
+
+	@Override
+	public boolean isAllDiffDetection() {
+		return false;
+	}
+	public ACQ_Oracle getOracle(){
+		return oracle;
+	}
+	public ACQ_Bias getBias(){
+		return bias;
+	}
+
+}
+

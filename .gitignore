@@ -1,0 +1,17 @@
+/bin1/
+/LOG/
+/target/
+/results/
+/logs
+/.vscode/*
+/oldFiles/*
+
+dependency-reduced-pom.xml
+.idea
+*.iml
+.DS_Store
+.classpath
+.settings
+.project
+
+/cp.txt

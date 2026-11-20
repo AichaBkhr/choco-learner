@@ -1,0 +1,4 @@
+difference.jar filter=lfs diff=lfs merge=lfs -text
+equal.jar filter=lfs diff=lfs merge=lfs -text
+toy1.jar filter=lfs diff=lfs merge=lfs -text
+*.jar filter=lfs diff=lfs merge=lfs -text
