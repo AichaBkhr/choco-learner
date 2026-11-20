@@ -1,6 +1,6 @@
-# Choco-Learner, CAnDy branch
+# Choco-Learner
 
-This branch contains the implementation of DCA, CAny and CAnDy used in the paper
+This repository contains the implementation of DCA, CAny and CAnDy used in the paper
 "Anytime Constraint Acquisition" for the modeling of combinatorial problems.
 
 ## Build
